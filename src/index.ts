@@ -1,19 +1,25 @@
-import express from "express";
-import mongoose from "mongoose";
+const express = require('express');
+const mongoose = require('mongoose');
 
-import User from "./schemas/User";
+import bodyParser from "body-parser";
 
-const app = express()
-const port = 8080
+import { UserController } from "./controllers";
 
-mongoose.connect('mongodb://127.0.0.1:27017/chat');
+const User = new UserController();
 
-app.get('/', (req: any, res: any) => {
-    res.send('Hello Vil!');
-    const user = new User({ email: 'test@dom.com', fullname: 'Test User' });
-    user.save().then(() => console.log('Knock Knock'));
-})
+mongoose.connect('mongodb+srv://Roman:Ferrari1984!@chatprogect.3kommti.mongodb.net/Chat');
+
+const app = express();
+const port = 3000;
+
+app.use(bodyParser.json());
+
+app.get('/user/:id', User.show)
+
+app.delete('/user/:id', User.delete)
+
+app.post('/user/registration', User.create);
 
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+    console.log(`Example app listening on port ${port}`);
+});
