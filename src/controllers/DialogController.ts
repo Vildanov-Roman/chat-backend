@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
-import { DialogModel } from "../models";
+import { DialogModel, MessageModel } from "../models";
 
 class DialogController {
     index(req: Request, res: Response) {
         const authorId: string = req.params.id;
 
         DialogModel.find({ author: authorId })
-            .populate('dialog')
+            .populate(['author', 'partner'])
             .exec()
             .then((dialogs) => {
                 if (dialogs.length === 0) {
@@ -32,30 +32,45 @@ class DialogController {
             partner: req.params.partner
         };
         const dialog = new DialogModel(postData);
-        dialog.save().then((obj: any) => {
-            res.json(obj)
+        dialog.save().then((dialogObj: any) => {
+
+            const message = new MessageModel({
+                text: req.body.text,
+                dialog: dialogObj._id,
+                user: req.body.author
+            });
+
+            message
+                .save()
+                .then(() => {
+                    res.json(dialogObj);
+                })
+                .catch(reason => {
+                    res.json(reason)
+                });
+
         }).catch(reason => {
             res.json(reason)
         })
     }
 
-    // async delete(req: Request, res: Response) {
-    //     const id: string = req.params.id;
-    //     try {
-    //         const user = await UserModel.findByIdAndRemove(id).exec();
-    //         if (!user) {
-    //             return res.status(404).json({
-    //                 message: "Not found"
-    //             });
-    //         }
-    //         res.json({
-    //             message: `User ${user.fullname} removed`
-    //         });
-    //     } catch (err) {
-    //         console.log("Error fetching user:", err);
-    //         res.status(500).json({ error: "Error fetching user." });
-    //     }
-    // }
+    async delete(req: Request, res: Response) {
+        const id: string = req.params.id;
+        try {
+            const dialog = await DialogModel.findByIdAndRemove(id).exec();
+            if (!dialog) {
+                return res.status(404).json({
+                    message: "Not found"
+                });
+            }
+            res.json({
+                message: `Dialog removed`
+            });
+        } catch (err) {
+            console.log("Error fetching Dialog:", err);
+            res.status(500).json({ error: "Error fetching Dialog." });
+        }
+    }
 }
 
 export default DialogController;
