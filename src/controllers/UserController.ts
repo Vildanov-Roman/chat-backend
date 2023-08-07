@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { UserModel } from "../models";
+import { createJWTToken } from "../utils";
+import { IUser } from "../models/User";
 
 class UserController {
     async show(req: Request, res: Response) {
@@ -55,6 +57,34 @@ class UserController {
             console.log("Error fetching user:", err);
             res.status(500).json({ error: "Error fetching user." });
         }
+    }
+
+    async login(req: Request, res: Response) {
+        const postData = {
+            email: req.body.login,
+            password: req.body.password
+        };
+
+        UserModel.findOne({ email: postData.email }, (err: any, user: IUser) => {
+            if (err) {
+                return res.status(404).json({
+                    message: "Not found"
+                });
+            }
+
+            if(user.password === postData.password) {
+                const token = createJWTToken(postData);
+                res.json({
+                    status: "success",
+                    token
+                });
+            } else {
+                res.json({
+                    status: "error",
+                    message: "incorrect password or Email"
+                });
+            }
+        });
     }
 }
 

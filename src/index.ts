@@ -6,7 +6,7 @@ import bodyParser from "body-parser";
 
 import { UserController, DialogController, MessageController } from "./controllers";
 
-import { updateLastSeen } from "./middlewares"
+import { updateLastSeen, checkAuth } from "./middlewares"
 
 const User = new UserController();
 const Dialog = new DialogController();
@@ -22,10 +22,12 @@ mongoose.connect(process.env.DB_HOST, { useNewUrlParser: true, useUnifiedTopolog
 
 app.use(bodyParser.json());
 app.use(updateLastSeen);
+app.use(checkAuth)
 
 app.get('/user/:id', User.show);
 app.delete('/user/:id', User.delete);
 app.post('/user/registration', User.create);
+app.post('/user/login', User.login);
 
 app.get('/dialogs/:id', Dialog.index);
 app.post('/dialogs', Dialog.create)

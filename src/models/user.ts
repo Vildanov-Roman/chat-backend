@@ -6,9 +6,9 @@ export interface IUser extends Document {
     fullname: string,
     password: string,
     confirmed: Boolean,
-    avatar: string,
-    confirm_hash: String,
-    last_seen: Date,
+    avatar?: string,
+    confirm_hash?: String,
+    last_seen?: Date,
 
 }
 
