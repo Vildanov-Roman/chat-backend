@@ -10,6 +10,10 @@ interface RequestCustom extends Request {
 }
 
 export default async (req: RequestCustom, res: Response, next: NextFunction) => {
+if (req.path === '/user/login' || req.path === '/user/registration') {
+    return next();
+}
+
     const token = req.headers.token;
 
     if (!token) {

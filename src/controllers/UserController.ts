@@ -61,18 +61,21 @@ class UserController {
 
     async login(req: Request, res: Response) {
         const postData = {
-            email: req.body.login,
+            email: req.body.email,
             password: req.body.password
         };
-
-        UserModel.findOne({ email: postData.email }, (err: any, user: IUser) => {
-            if (err) {
+    
+        try {
+            const user = await UserModel.findOne({ email: postData.email }).exec();
+    
+            if (!user) {
                 return res.status(404).json({
-                    message: "Not found"
+                    status: "error",
+                    message: "User not found"
                 });
             }
-
-            if(user.password === postData.password) {
+    
+            if (user.password === postData.password) {
                 const token = createJWTToken(postData);
                 res.json({
                     status: "success",
@@ -81,11 +84,15 @@ class UserController {
             } else {
                 res.json({
                     status: "error",
-                    message: "incorrect password or Email"
+                    message: "Incorrect password or email"
                 });
             }
-        });
+        } catch (error) {
+            console.log("Error fetching user:", error);
+            res.status(500).json({ error: "Error fetching user." });
+        }
     }
+    
 }
 
 export default UserController;
