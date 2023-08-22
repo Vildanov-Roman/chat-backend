@@ -1,17 +1,10 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { IUser } from "./User";
 
 
 export interface IDialog extends Document {
-    author: {
-        type: Schema.Types.ObjectId,
-        ref: string,
-        require: true,
-    };
-    partner: {
-        type: Schema.Types.ObjectId,
-        ref: string,
-        require: true,
-    };
+  partner: IUser | string;
+  author: IUser | string;
     lastMessage: {
         type: Schema.Types.ObjectId,
         ref: string,
@@ -19,14 +12,18 @@ export interface IDialog extends Document {
 
 }
 
-const DialogSchema = new Schema({  
-  author: {type: Schema.Types.ObjectId, ref: "User"},
-  partner: {type: Schema.Types.ObjectId, ref: "User"},
-  lastMessage: {type: Schema.Types.ObjectId, ref: "Message"},
-}, {
-  timestamps: true,
-});
+const DialogSchema = new Schema(
+  {
+    partner: { type: Schema.Types.ObjectId, ref: "User" },
+    author: { type: Schema.Types.ObjectId, ref: "User" },
+    lastMessage: { type: Schema.Types.ObjectId, ref: "Message" },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-const DialogModel = mongoose.model<IDialog>('Dialog', DialogSchema);
+const DialogModel = mongoose.model<IDialog>("Dialog", DialogSchema);
+
 
 export default DialogModel;

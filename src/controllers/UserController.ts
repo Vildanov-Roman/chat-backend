@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { UserModel } from "../models";
 import { createJWTToken } from "../utils";
+import bcrypt from "bcrypt"
 import { IUser } from "../models/User";
 
 class UserController {
@@ -20,9 +21,25 @@ class UserController {
         }
     }
 
-    async getMe() {
-        // TODO: сделать возвращение инфы о себе
-    }
+    async getMe (req: Request, res: Response): Promise<void> {
+        const id: string = (req as any).user?._id; // Use type assertion if necessary
+      
+        try {
+          const user = await UserModel.findById(id).exec();
+      
+          if (!user) {
+            res.status(404).json({
+              message: "User not found",
+            });
+          }
+      
+          res.json(user);
+        } catch (err) {
+          console.log("Error fetching user:", err);
+          res.status(500).json({ error: "Error fetching user." });
+        }
+      };
+    
 
     async create(req: Request, res: Response) {
         const postData = {
@@ -75,7 +92,7 @@ class UserController {
                 });
             }
     
-            if (user.password === postData.password) {
+            if (bcrypt.compareSync(postData.password, user.password)) {
                 const token = createJWTToken(postData);
                 res.json({
                     status: "success",
