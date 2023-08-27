@@ -1,7 +1,15 @@
 import { Request, Response } from "express";
 import { DialogModel, MessageModel } from "../models";
+import { Server as SocketServer, Socket } from "socket.io";
 
 class DialogController {
+
+  io: SocketServer
+
+    constructor(io: SocketServer) {
+        this.io = io;
+    }
+    
     index = (req: Request, res: Response): void => {
         
         const userId: string = req.params.id;        
@@ -36,64 +44,34 @@ class DialogController {
     //     // TODO: сделать возвращение инфы о себе
     // }
 
-    create = (req: Request, res: Response): void => {
-        const postData = {
-          author: req.params.id,
-          partner: req.body.partner,
-        };
-    
-        DialogModel.findOne(
-          {
-            author: req.params.id,
-            partner: req.body.partner,
-          },
-          (err: any, dialog: any) => {
-            if (err) {
-              return res.status(500).json({
-                status: 'error',
-                message: err,
+    create = async (req: Request, res: Response) => {
+      try {
+          const { author, partner } = req.body;
+
+          // Check if a dialog already exists between the users
+          const existingDialog = await DialogModel.findOne({
+              $or: [
+                  { author, partner },
+                  { author: partner, partner: author }
+              ]
+          }).exec();
+
+          if (existingDialog) {
+              return res.status(400).json({
+                  message: "Dialog already exists between users"
               });
-            }
-            if (dialog) {
-              return res.status(403).json({
-                status: 'error',
-                message: 'Такой диалог уже есть',
-              });
-            } else {
-              const dialog = new DialogModel(postData);
-    
-              dialog
-                .save()
-                .then((dialogObj) => {
-                  const message = new MessageModel({
-                    text: req.body.text,
-                    user: req.params.id,
-                    dialog: dialogObj._id,
-                  });
-    
-                  message
-                    .save()
-                    .then(() => {
-                      dialogObj.lastMessage = message._id;
-                      dialogObj.save().then(() => {
-                        res.json(dialogObj);
-                        
-                      });
-                    })
-                    .catch((reason) => {
-                      res.json(reason);
-                    });
-                })
-                .catch((err) => {
-                  res.json({
-                    status: 'error',
-                    message: err,
-                  });
-                });
-            }
-          },
-        );
-      };
+          }
+
+          // If no existing dialog, create a new one
+          const dialog = new DialogModel({ author, partner });
+          const savedDialog = await dialog.save();
+
+          return res.status(201).json(savedDialog);
+      } catch (error) {
+          console.error("Error creating dialog:", error);
+          return res.status(500).json({ error: "Error creating dialog" });
+      }
+  };
     
       delete = (req: Request, res: Response): void => {
         const id: string = req.params.id;

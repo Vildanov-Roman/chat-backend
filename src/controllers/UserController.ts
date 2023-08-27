@@ -2,9 +2,16 @@ import { Request, Response } from "express";
 import { UserModel } from "../models";
 import { createJWTToken } from "../utils";
 import bcrypt from "bcrypt"
+import { Server as SocketServer, Socket } from "socket.io";
 import { IUser } from "../models/User";
 
 class UserController {
+    io: SocketServer
+
+    constructor(io: SocketServer) {
+        this.io = io;
+    }
+
     async show(req: Request, res: Response) {
         const id: string = req.params.id;
         try {

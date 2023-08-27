@@ -2,14 +2,14 @@ import { NextFunction, Request, Response } from "express";
 import { verifyJWTToken } from "../utils";
 import { IUser } from "../models/User";
 
-interface RequestCustom extends Request {
-    user?: IUser;
-    headers: {
-        token?: string;
-    };
-}
+// interface RequestCustom extends Request {
+//     user?: IUser;
+//     headers: {
+//         token?: string;
+//     };
+// }
 
-export default async (req: RequestCustom, res: Response, next: NextFunction) => {
+export default async (req: any, res: Response, next: NextFunction) => {
 if (req.path === '/user/login' || req.path === '/user/registration') {
     return next();
 }
