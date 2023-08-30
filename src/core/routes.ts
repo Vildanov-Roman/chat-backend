@@ -1,6 +1,7 @@
 import bodyParser from "body-parser";
 import express from 'express';
 import { Server as SocketServer, Socket } from "socket.io";
+const cors = require('cors');
 
 import {
   UserCtrl,
@@ -14,6 +15,8 @@ export default (app: express.Express, io: SocketServer) => {
   const UserController = new UserCtrl(io);
   const DialogController = new DialogCtrl(io);
   const MessageController = new MessageCtrl(io);
+
+  app.use(cors());
 
   app.use(bodyParser.json());
   app.use(updateLastSeen);
