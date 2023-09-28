@@ -3,7 +3,10 @@ import { UserModel } from "../models";
 import { createJWTToken } from "../utils";
 import bcrypt from "bcrypt"
 import { Server as SocketServer, Socket } from "socket.io";
+import { validationResult, Result, ValidationError } from "express-validator";
 import { IUser } from "../models/User";
+import mailer from "../core/mailer";
+import { SentMessageInfo } from "nodemailer/lib/sendmail-transport";
 
 class UserController {
     io: SocketServer
@@ -55,14 +58,40 @@ class UserController {
             password: req.body.password,
         };
 
-        try {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            res.status(422).json({ errors: errors.array() });
+          } else {
             const user = new UserModel(postData);
-            const savedUser = await user.save();
-            res.status(201).json(savedUser);
-        } catch (err) {
-            console.log("Error saving user:", err);
-            res.status(500).json({ error: "Error saving user." });
-        }
+      
+            user
+              .save()
+              .then((obj: IUser) => {
+                res.json(obj);
+                mailer.sendMail(
+                  {
+                    from: "admin@test.com",
+                    to: postData.email,
+                    subject: "Подтверждение почты React Chat Tutorial",
+                    html: `Для того, чтобы подтвердить почту, перейдите <a href="http://localhost:3000/signup/verify?hash=${obj.confirm_hash}">по этой ссылке</a>`,
+                  },
+                  function (err: Error | null, info: SentMessageInfo) {
+                    if (err) {
+                      console.log(err);
+                    } else {
+                      console.log(info);
+                    }
+                  }
+                );
+              })
+              .catch((reason) => {
+                res.status(500).json({
+                  status: "error",
+                  message: reason,
+                });
+              });
+          }
     }
 
     async delete(req: Request, res: Response) {
@@ -83,6 +112,38 @@ class UserController {
         }
     }
 
+    async verify(req: Request, res: Response) {
+      const hash: any = req.query.hash;
+    
+      try {
+        if (!hash) {
+          return res.status(422).json({ errors: "Invalid hash" });
+        }
+    
+        const user = await UserModel.findOne({ confirm_hash: hash });
+    
+        if (!user) {
+          return res.status(404).json({
+            status: "error",
+            message: "Hash not found",
+          });
+        }
+    
+        user.confirmed = true;
+        await user.save();
+    
+        res.json({
+          status: "success",
+          message: "Аккаунт успешно подтвержден!",
+        });
+      } catch (err) {
+        return res.status(500).json({
+          status: "error",
+          message: "Error fetching user",
+        });
+      }
+    };
+
     async login(req: Request, res: Response) {
         const postData = {
             email: req.body.email,
@@ -93,9 +154,8 @@ class UserController {
             const user = await UserModel.findOne({ email: postData.email }).exec();
     
             if (!user) {
-                return res.status(404).json({
-                    status: "error",
-                    message: "User not found"
+                return res.status(422).json({
+                    errorr: "Invalid hash"
                 });
             }
     

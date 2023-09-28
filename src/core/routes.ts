@@ -10,6 +10,7 @@ import {
 } from "../controllers";
 
 import { updateLastSeen, checkAuth } from "../middlewares";
+import { registerValidation, loginValidation } from '../utils/validations';
 
 export default (app: express.Express, io: SocketServer) => {
   const UserController = new UserCtrl(io);
@@ -25,8 +26,8 @@ export default (app: express.Express, io: SocketServer) => {
   app.get("/user/me", UserController.getMe);
   app.get("/user/:id", UserController.show);
   app.delete("/user/:id", UserController.delete);
-  app.post("/user/registration", UserController.create);
-  app.post("/user/login", UserController.login);
+  app.post("/user/signup", registerValidation, UserController.create);
+  app.post("/user/signin", loginValidation, UserController.login);
   
   app.get("/dialogs", DialogController.index);
   app.post("/dialogs", DialogController.create);

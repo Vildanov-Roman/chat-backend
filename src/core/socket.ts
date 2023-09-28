@@ -1,12 +1,12 @@
-const socket = require ('socket.io');
+// const socket = require ('socket.io');
 import http from 'http';
-import { Socket } from 'socket.io';
+import { Server } from 'socket.io';
 
 export default (http: http.Server) => {
-  
-  const io = socket(http);
+  const io = new Server(http);
 
   io.on('connection', function(socket: any) {
+    console.log('Connected!!!')
     socket.on('DIALOGS:JOIN', (dialogId: string) => {
       socket.dialogId = dialogId;
       socket.join(dialogId);
@@ -14,6 +14,10 @@ export default (http: http.Server) => {
     socket.on('DIALOGS:TYPING', (obj: any) => {
       socket.broadcast.emit('DIALOGS:TYPING', obj);
     });
+  });
+
+  io.on('error', (error) => {
+    console.error('Socket.IO Error:', error);
   });
 
   return io;

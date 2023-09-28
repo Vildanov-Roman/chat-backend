@@ -10,7 +10,7 @@ import { IUser } from "../models/User";
 // }
 
 export default async (req: any, res: Response, next: NextFunction) => {
-if (req.path === '/user/login' || req.path === '/user/registration') {
+if (req.path === '/user/signin' || req.path === '/user/signup') {
     return next();
 }
 
