@@ -24,10 +24,11 @@ export default (app: express.Express, io: SocketServer) => {
   app.use(checkAuth);
   
   app.get("/user/me", UserController.getMe);
-  app.get("/user/:id", UserController.show);
-  app.delete("/user/:id", UserController.delete);
+  app.get("/user/verify", UserController.verify);  
   app.post("/user/signup", registerValidation, UserController.create);
   app.post("/user/signin", loginValidation, UserController.login);
+  app.get("/user/:id", UserController.show);
+  app.delete("/user/:id", UserController.delete);  
   
   app.get("/dialogs", DialogController.index);
   app.post("/dialogs", DialogController.create);
